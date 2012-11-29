@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "mm.h"
+#include "mm_flymake.h"
 #include "memlib.h"
 
 /*********************************************************
@@ -104,8 +104,8 @@ static void *expand_heap(size_t words)
 	//Allocate an even number of words to maintain alignment
 	size = ( words % 2 ) ? ( words + 1 ) * WSIZE : words * WSIZE;
 	
-	//blkP = mem_sbrk(size);
-	if((int)(blkP = mem_sbrk(size)) < 0) //(void *)-1 )
+	blkP = mem_sbrk(size);
+	if(blkP == (void *)-1 )
 		return NULL;
 		
 	PUT( HDRP(blkP), PACK(size, 0) ); //Initialize Header
