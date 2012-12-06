@@ -113,32 +113,36 @@ static void *expand_heap(size_t max_needed)
  */
 void *mm_malloc(size_t size)
 {
-    size_t adj_size;
-    size_t expansion;
-    char *bp;
+    size_t asize;      // Adjusted block size
+    size_t extendsize; // Amount to extend heap if no fit
+    char *bp;      
 
-    if(size <= 0)
+    if (heap_ptr == 0)
+		mm_init();
+
+    // Ignore spurious requests
+    if (size == 0)
 		return NULL;
 
-    if(size <= DSIZE)
-		adj_size = DSIZE + OVERHEAD;
+    // Adjust block size to include overhead and alignment reqs.
+    if (size <= DSIZE)     
+		asize = 2*DSIZE;    
     else
-		adj_size = DSIZE * ((size + (OVERHEAD) + (DSIZE-1)) / DSIZE);
+		asize = DSIZE * ( (size + (DSIZE) + (DSIZE-1)) / DSIZE ); 
 
-	bp = find_space(adj_size);
-    if(bp != NULL)
-    {
-		place(bp, adj_size);
+    // Search the free list for a fit
+    if ( (bp = find_space(asize)) != NULL ) 
+    {  
+		place(bp, asize);              
 		return bp;
     }
+
+    // No fit found. Get more memory and place the block
+    extendsize = MAX(asize,EXPANDBLOCK); 
+    if ( (bp = expand_heap(extendsize/WSIZE)) == NULL )  
+		return NULL;                                  
+    place(bp, asize);    
     
-    expansion = MAX(adj_size, EXPANDBLOCK);
-    bp = expand_heap(expansion/WSIZE);
-    
-    if(bp == NULL)
-		return NULL;
- 
-    place(bp, adj_size);
     return bp;
 }
 
@@ -310,7 +314,7 @@ static inline int check_size(char* bp){
 	return HDRP(bp) == FTRP(bp);
 }
 
-int check_heap(){
+int check_heap(){ 
 	int result = 1;
 	
 	//check the freelist
@@ -326,7 +330,6 @@ int check_heap(){
 			printf("Error: footer not at expected location");
 			result = 0;
 		}
-		cur = *cur;
 	}
 	
 	//check the continuous blocks
