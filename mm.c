@@ -27,16 +27,16 @@
  * provide your team information in the following struct.
  ********************************************************/
 team_t team = {
-    /* Team name */
-    "Systematic Burnout",
-    /* First member's full name */
-    "Thomas Kline",
-    /* First member's email address */
-    "Tombo890@gmail.com",
-    /* Second member's full name (leave blank if none) */
-    "John Wells",
-    /* Second member's email address (leave blank if none) */
-    "JohnCWells86@gmail.com"
+  /* Team name */
+  "Systematic Burnout",
+  /* First member's full name */
+  "Thomas Kline",
+  /* First member's email address */
+  "Tombo890@gmail.com",
+  /* Second member's full name (leave blank if none) */
+  "John Wells",
+  /* Second member's email address (leave blank if none) */
+  "JohnCWells86@gmail.com"
 };
 
 #define WSIZE 4
@@ -72,39 +72,39 @@ static void place( void *bp, size_t size );
  */
 int mm_init(void)
 {
-    if( (heap_ptr = mem_sbrk(4*WSIZE) ) == NULL )
-	    return -1;
+  if( (heap_ptr = mem_sbrk(4*WSIZE) ) == NULL )
+    return -1;
  
-    PUT( heap_ptr, 0 );
-    PUT( heap_ptr+WSIZE, PACK(OVERHEAD, 1) );
-    PUT( heap_ptr+DSIZE, PACK(OVERHEAD, 1) );
-    PUT( heap_ptr+WSIZE+DSIZE, PACK(0, 1) ); 
-    heap_ptr += DSIZE;
+  PUT( heap_ptr, 0 );
+  PUT( heap_ptr+WSIZE, PACK(OVERHEAD, 1) );
+  PUT( heap_ptr+DSIZE, PACK(OVERHEAD, 1) );
+  PUT( heap_ptr+WSIZE+DSIZE, PACK(0, 1) ); 
+  heap_ptr += DSIZE;
     
-    char *bp;
-    bp = expand_heap(EXPANDBLOCK/WSIZE);
-    if(bp == NULL)
-	    return -1;
+  char *bp;
+  bp = expand_heap(EXPANDBLOCK/WSIZE);
+  if(bp == NULL)
+    return -1;
     
-    return 0;
+  return 0;
 }
 
 static void *expand_heap(size_t max_needed)
 {
-    char *bp;
-    size_t size;
+  char *bp;
+  size_t size;
     
-    size = (max_needed % 2) ? (max_needed+1) * WSIZE : max_needed * WSIZE;
+  size = (max_needed % 2) ? (max_needed+1) * WSIZE : max_needed * WSIZE;
     
-    bp = mem_sbrk(size);
-    if(bp == (void *)-1)
-	    return NULL;
+  bp = mem_sbrk(size);
+  if(bp == (void *)-1)
+    return NULL;
     
-    PUT( HDRP(bp), PACK(size, 0) );
-    PUT( FTRP(bp), PACK(size, 0) );
-    PUT( HDRP(NEXT_BLKP(bp)), PACK(0, 1) );
+  PUT( HDRP(bp), PACK(size, 0) );
+  PUT( FTRP(bp), PACK(size, 0) );
+  PUT( HDRP(NEXT_BLKP(bp)), PACK(0, 1) );
 
-    return coalesce(bp);
+  return coalesce(bp);
 }
 
 /* 
@@ -113,37 +113,37 @@ static void *expand_heap(size_t max_needed)
  */
 void *mm_malloc(size_t size)
 {
-    size_t asize;      // Adjusted block size
-    size_t extendsize; // Amount to extend heap if no fit
-    char *bp;      
+  size_t asize;      // Adjusted block size
+  size_t extendsize; // Amount to extend heap if no fit
+  char *bp;      
 
-    if (heap_ptr == 0)
-		mm_init();
+  if (heap_ptr == 0)
+    mm_init();
 
-    // Ignore spurious requests
-    if (size == 0)
-		return NULL;
+  // Ignore spurious requests
+  if (size == 0)
+    return NULL;
 
-    // Adjust block size to include overhead and alignment reqs.
-    if (size <= DSIZE)     
-		asize = 2*DSIZE;    
-    else
-		asize = DSIZE * ( (size + (DSIZE) + (DSIZE-1)) / DSIZE ); 
+  // Adjust block size to include overhead and alignment reqs.
+  if (size <= DSIZE)     
+    asize = 2*DSIZE;    
+  else
+    asize = DSIZE * ( (size + (DSIZE) + (DSIZE-1)) / DSIZE ); 
 
-    // Search the free list for a fit
-    if ( (bp = find_space(asize)) != NULL ) 
+  // Search the free list for a fit
+  if ( (bp = find_space(asize)) != NULL ) 
     {  
-		place(bp, asize);              
-		return bp;
+      place(bp, asize);              
+      return bp;
     }
 
-    // No fit found. Get more memory and place the block
-    extendsize = MAX(asize,EXPANDBLOCK); 
-    if ( (bp = expand_heap(extendsize/WSIZE)) == NULL )  
-		return NULL;                                  
-    place(bp, asize);    
+  // No fit found. Get more memory and place the block
+  extendsize = MAX(asize,EXPANDBLOCK); 
+  if ( (bp = expand_heap(extendsize/WSIZE)) == NULL )  
+    return NULL;                                  
+  place(bp, asize);    
     
-    return bp;
+  return bp;
 }
 
 /*
@@ -152,20 +152,20 @@ void *mm_malloc(size_t size)
  */
 static void place(void *bp, size_t size)
 {
-    size_t current_size = GET_SIZE(HDRP(bp));
+  size_t current_size = GET_SIZE(HDRP(bp));
 
-    if( current_size >= DSIZE + OVERHEAD + size ) //If the size of free block >= needed size
+  if( current_size >= DSIZE + OVERHEAD + size ) //If the size of free block >= needed size
     {
-		PUT( HDRP(bp), PACK(size, 1) );//Allocate the block
-		PUT( FTRP(bp), PACK(size, 1) );
-		bp = NEXT_BLKP(bp);
-		PUT( HDRP(bp), PACK(current_size-size, 0) );//Update the size of the remaining free block
-		PUT( FTRP(bp), PACK(current_size-size, 0) );
+      PUT( HDRP(bp), PACK(size, 1) );//Indicate the header as occupied
+      PUT( FTRP(bp), PACK(size, 1) );// Same for footer
+      bp = NEXT_BLKP(bp); // allocate the block
+      PUT( HDRP(bp), PACK(current_size-size, 0) );//Update the size of the remaining free block
+      PUT( FTRP(bp), PACK(current_size-size, 0) ); 
     }
-    else //If size of free block is less than needed size
+  else //If size is less than needed, mark as occupied
     {	
-		PUT( HDRP(bp), PACK(current_size, 1) );
-		PUT( FTRP(bp), PACK(current_size, 1) );
+      PUT( HDRP(bp), PACK(current_size, 1) );
+      PUT( FTRP(bp), PACK(current_size, 1) );
     }
 }
 
@@ -176,16 +176,17 @@ static void place(void *bp, size_t size)
  */
 static void *find_space(size_t size)
 {
-    void *bp;
+  void *bp;
     
-    for( bp = heap_ptr; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp) )
+  for( bp = heap_ptr; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp) )
     {
-		if( !GET_ALLOC(HDRP(bp)) && (size <= GET_SIZE(HDRP(bp))) )
-		{
-	    	return bp;
-		}
+      //If the block is empty and able to fit, return
+      if( !GET_ALLOC(HDRP(bp)) && (size <= GET_SIZE(HDRP(bp))) )
+	{
+	  return bp;
+	}
     }
-    return NULL;
+  return NULL; // No space big enough for size.
 }
 
 
@@ -196,11 +197,11 @@ static void *find_space(size_t size)
  */
 void mm_free(void *bp)
 {
-    size_t size = GET_SIZE(HDRP(bp));
+  size_t size = GET_SIZE(HDRP(bp));
     
-    PUT( HDRP(bp), PACK(size,0) );
-    PUT( FTRP(bp), PACK(size,0) );
-    coalesce(bp);
+  PUT( HDRP(bp), PACK(size,0) ); // Indicate the header as unallocated
+  PUT( FTRP(bp), PACK(size,0) );// Indicate the footer as unallocated
+  coalesce(bp);
 }
 
 /*
@@ -209,37 +210,37 @@ void mm_free(void *bp)
  */
 static void *coalesce(void *bp)
 {
-    size_t prev_alloc = GET_ALLOC( FTRP(PREV_BLKP(bp)) );//is the previous block free
-    size_t next_alloc = GET_ALLOC( HDRP(NEXT_BLKP(bp)) );//is the next block free
-    size_t size = GET_SIZE(HDRP(bp));
+  size_t prev_alloc = GET_ALLOC( FTRP(PREV_BLKP(bp)) );//is the previous free?
+  size_t next_alloc = GET_ALLOC( HDRP(NEXT_BLKP(bp)) );//is the next free?
+  size_t size = GET_SIZE(HDRP(bp));
 
-    if(prev_alloc && next_alloc) //Case 1: Neither free
+  if(prev_alloc && next_alloc) //Case 1: Neither is free
     {
-		return bp;
-	}
+      return bp;
+    }
 
-    else if(prev_alloc && !next_alloc) //Case 2: Only next is free
+  else if(prev_alloc && !next_alloc) //Case 2: Only next is free
     {
-		size += GET_SIZE(HDRP(NEXT_BLKP(bp)));//Combines sizes
-		PUT(HDRP(bp), PACK(size, 0));//Replaces header and footer
-		PUT(FTRP(bp), PACK(size, 0));
-		return(bp);
+      size += GET_SIZE(HDRP(NEXT_BLKP(bp)));//Combines sizes
+      PUT(HDRP(bp), PACK(size, 0));//Replaces header and footer
+      PUT(FTRP(bp), PACK(size, 0));
+      return(bp);
     }
     
-    else if(!prev_alloc && next_alloc)//Case 3: Only previous is free
+  else if(!prev_alloc && next_alloc)//Case 3: Only previous is free
     {
-		size += GET_SIZE( HDRP(PREV_BLKP(bp)) );
-		PUT( FTRP(bp), PACK(size, 0) );
-		PUT( HDRP( PREV_BLKP(bp)), PACK(size, 0) );
-		return(PREV_BLKP(bp));
+      size += GET_SIZE( HDRP(PREV_BLKP(bp)) ); // Increase size to allocate previous block
+      PUT( FTRP(bp), PACK(size, 0) ); // Allocate header and footer
+      PUT( HDRP( PREV_BLKP(bp)), PACK(size, 0) );
+      return(PREV_BLKP(bp)); // Return with the bp moved to the start of the previous block.
     }
 
-    else //Case 4: Both are free
+  else //Case 4: Both are free
     {								
-		size += GET_SIZE( HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)) );
-		PUT(HDRP( PREV_BLKP(bp)), PACK(size, 0) );
-		PUT(FTRP( NEXT_BLKP(bp)), PACK(size, 0) );
-		return(PREV_BLKP(bp));
+      size += GET_SIZE( HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)) );
+      PUT(HDRP( PREV_BLKP(bp)), PACK(size, 0) );
+      PUT(FTRP( NEXT_BLKP(bp)), PACK(size, 0) );
+      return(PREV_BLKP(bp)); //Back up to previous pointer and return
     }
 }
 
@@ -258,89 +259,86 @@ static void *coalesce(void *bp)
  */
 void *mm_realloc(void *ptr, size_t adj_size)
 {
-	void *oldptr = ptr;
-	size_t copySize = GET_SIZE(((char *)oldptr - WSIZE));
-	size_t size;
-	void *newptr;
+  void *oldptr = ptr;
+  size_t copySize = GET_SIZE(((char *)oldptr - WSIZE));
+  size_t size;
+  void *newptr;
 	
-	if(ptr == NULL) //Case 1
-	{				
-		return mm_malloc(adj_size);
+  if(ptr == NULL) //Case 1
+    {				
+      return mm_malloc(adj_size);
+    }
+  else if(adj_size == 0) //Case 2
+    {			
+      mm_free(ptr);
+      return ptr;
+    }	
+  else
+    {
+      if(adj_size <= DSIZE)
+	{		
+	  size = DSIZE + OVERHEAD; //Aligns the new size
 	}
-	else if(adj_size == 0) //Case 2
-	{			
-		mm_free(ptr);
-		return ptr;
-	}	
-	else
-	{
-		if(adj_size <= DSIZE)
-		{		
-			size = DSIZE + OVERHEAD; //Alligns the new size to a multiple of 8
-		}
-    	else
+      else
     	{
-			size = DSIZE * ((adj_size + (OVERHEAD) + (DSIZE-1)) / DSIZE);
-		}
-	
-		if(copySize > size) //Case 3
-		{		
-			memmove(oldptr, oldptr, size);//replace with truncated version of block
-			newptr = NEXT_BLKP(oldptr);	//pointer to the remaining memory to be freed
-			mm_free(newptr);
-			return oldptr;
-		}
-		else if(copySize < size) //Case 4
-		{	
-			newptr = mm_malloc(size);
-			if(newptr == NULL) //If we cant allocate
-			{		
-				return NULL;
-			}
-    		memmove(newptr, oldptr, size);//move to newly allocated memory
-    		mm_free(oldptr);
-    		return newptr;
-		}
-		else //Case 5
-			return oldptr;
+	  size = DSIZE * ((adj_size + (OVERHEAD) + (DSIZE-1)) / DSIZE);
 	}
+	
+      if(copySize > size) //Case 3
+	{		
+	  memmove(oldptr, oldptr, size);//replace with truncated version of block
+	  newptr = NEXT_BLKP(oldptr);	//pointer to the remaining memory to be freed
+	  mm_free(newptr);
+	  return oldptr;
+	}
+      else if(copySize < size) //Case 4
+	{	
+	  newptr = mm_malloc(size);
+	  if(newptr == NULL) //If we cant allocate
+	    {		
+	      return NULL;
+	    }
+	  memmove(newptr, oldptr, size);//move to newly allocated memory
+	  mm_free(oldptr);
+	  return newptr;
+	}
+      else //Case 5
+	return oldptr;
+    }
 }
-
-
-
 
 //Test if the footer pointer exists at the size from the base pointer
 static inline int check_size(char* bp){
-	return HDRP(bp) == FTRP(bp);
+  return HDRP(bp) == FTRP(bp);
 }
 
-int check_heap(){ 
-	int result = 1;
+int mm_check(){ 
+  int result = 1;
 	
-	//check the freelist
-	int heapListSize = 0;
-	char * cur;
-	cur = heap_ptr;
-	while(cur != 0)//end of list
-	{
-		++heapListSize;
+  //check the freelist
+  int heapListSize = 0;
+  char *cur;
+  cur = heap_ptr;
+  while(cur != 0) // Cycle through the freelist
+    {
+      ++heapListSize; 
 		
-		if(!check_size(cur))
-		{
-			printf("Error: footer not at expected location");
-			result = 0;
-		}
-	}
-	
-	//check the continuous blocks
-	cur = heap_ptr;
-	int adjacentListSize = 0;
-	//bool lastFree = 1;
-	while( GET_SIZE(HDRP(cur)) != 0 && GET_ALLOC(HDRP(cur)) != 1 ) //end of adjacency list
+      if(!check_size(cur)) 
 	{
-		++adjacentListSize;
-		cur = NEXT_BLKP(cur);
+	  printf("Error: footer not at expected location");
+	  result = 0;
 	}
+    }
 	
-	return result; 
+  // Check the contiguous blocks
+  cur = heap_ptr;
+  int adjacentListSize = 0;
+  //bool lastFree = 1;
+  while( GET_SIZE(HDRP(cur)) != 0 && GET_ALLOC(HDRP(cur)) != 1 ) //
+    {
+      ++adjacentListSize;
+      cur = NEXT_BLKP(cur);
+    }
+	
+  return result; 
 }
